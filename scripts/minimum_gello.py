@@ -10,7 +10,8 @@ from i2rt.robots.get_robot import get_yam_robot
 from i2rt.robots.motor_chain_robot import MotorChainRobot
 from i2rt.robots.robot import Robot
 
-DEFAULT_ROBOT_PORT = 11333
+# DEFAULT_ROBOT_PORT = 11333
+DEFAULT_ROBOT_PORT = 11334
 
 
 class ServerRobot:
@@ -150,7 +151,10 @@ def main(args: Args) -> None:
                 else:
                     print("clear bilateral pd")
                     robot.update_kp_kd(kp=np.ones(6) * 0.0, kd=np.ones(6) * 0.0)
+                    t1 = time.time()
                     robot.command_joint_pos(current_follower_joint_pos[:6])
+                    t2 = time.time()
+                    print(f"time to command joint pos: {t2 - t1}")
                 synchronized = not synchronized
                 while current_button[0] > 0.5:
                     time.sleep(0.03)
