@@ -1,6 +1,8 @@
+import atexit
 import copy
 import logging
 import os
+import signal
 import threading
 import time
 from dataclasses import dataclass
@@ -83,6 +85,8 @@ class MotorChainRobot(Robot):
         test_duration: float = 2.0,  # max test duration for each direction (s)
         position_threshold: float = 0.01,  # minimum position change to consider motor still moving (rad)
         check_interval: float = 0.05,  # time interval between checks (s)
+        reset_pos: Optional[np.ndarray] = None,  # reset position to move to during close
+        home_pos: Optional[np.ndarray] = None,  # home position to move to during close
     ) -> None:
         self.temp_record_flag = temp_record_flag
         if gripper_index is not None:
@@ -197,9 +201,14 @@ class MotorChainRobot(Robot):
         self._server_thread = threading.Thread(target=self.start_server, name="robot_server")
         self._server_thread.start()
 
+        # Store reset and home positions
+        self._reset_pos = np.array(reset_pos) if reset_pos is not None else None
+        self._home_pos = np.array(home_pos) if home_pos is not None else None
+
         if not zero_gravity_mode:
             # set current qpos as target pos with the default PD parameters
             self.command_joint_pos(self._joint_state.pos)
+    
     def __repr__(self) -> str:
         return f"MotorChainRobot(motor_chain={self.motor_chain})"
 
@@ -512,8 +521,8 @@ class MotorChainRobot(Robot):
             time.sleep(time_interval_s / steps)
 
     def close(self) -> None:
-        """Safely close the robot by setting all torques to zero."""
-        # self.move_to_zero()
+        """Safely close the robot by moving to reset_pos then home_pos, then setting all torques to zero."""
+        print("Closing robot (motorchainrobot)...")
         self._stop_event.set()  # Signal the thread to stop
         self._server_thread.join()  # Wait for the thread to finish
         self.motor_chain.close()

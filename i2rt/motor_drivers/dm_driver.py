@@ -88,7 +88,9 @@ class PassiveEncoderReader:
         # Convert position and velocity to radians
         position_rad = position * 2 * np.pi / 4096
         velocity_rad = velocity * 2 * np.pi / 4096
-        button_state = [digital_inputs % 2, digital_inputs // 2]
+        # Extract two button states from digital_inputs byte:
+        # bit 0 = button 0, bit 1 = button 1
+        button_state = [int((digital_inputs >> 0) & 1), int((digital_inputs >> 1) & 1)]
 
         return position_rad, velocity_rad, button_state
 

@@ -63,7 +63,6 @@ def get_yam_robot(
         motor_directions.append(1)
         kp = np.concatenate([kp, np.array([gripper_kp])])
         kd = np.concatenate([kd, np.array([gripper_kd])])
-
     motor_chain = DMChainCanInterface(
         motor_list,
         motor_offsets,
